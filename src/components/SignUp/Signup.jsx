@@ -1,13 +1,22 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../util/firebase";
+
 
 export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate()
+
 
   const signUp = async (e) => {
     e.preventDefault();
-    // Put the signUp code here
+    const user = await createUserWithEmailAndPassword(auth, email, password)
+    .then(()=>{
+      console.log("signed up");
+      navigate("/login")
+    })
   };
   return (
     <>

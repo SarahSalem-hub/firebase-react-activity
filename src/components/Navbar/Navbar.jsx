@@ -1,6 +1,10 @@
 import { Disclosure } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
+import { Button } from "reactstrap";
+import { auth } from "../../util/firebase";
 
 const navigation = [
   { name: "Home", href: "/", current: true },
@@ -14,6 +18,23 @@ function classNames(...classes) {
 }
 
 export default function Navbar() {
+  const [isAuthActive, setisAuthActive] = useState(false);
+
+  useEffect(() => {
+    const listener = onAuthStateChanged(auth, async (user) => {
+      setisAuthActive(Boolean(user));
+    });
+
+    return () => {
+      listener();
+    };
+  }, []);
+
+  function handleSignOut() {
+    signOut(auth);
+  }
+  console.log(isAuthActive);
+
   return (
     <Disclosure as="nav" className="bg-gray-800">
       {({ open }) => (
@@ -51,11 +72,32 @@ export default function Navbar() {
                       </NavLink>
                     </>
                   ))}
+                  {isAuthActive ? (
+                    <NavLink
+                      to="/login"
+                      onClick={handleSignOut}
+                      className={({ isActive }) =>
+                        classNames(
+                          isActive
+                            ? "bg-gray-900 text-white"
+                            : "text-gray-300 hover:bg-gray-700 hover:text-white",
+                          "rounded-md px-3 py-2 text-sm font-medium"
+                        )
+                      }
+                    >
+                      Sign out
+                    </NavLink>
+                  ) : null}
                 </div>
               </div>
             </div>
           </div>
-
+          <h1 className="text-white">{auth?.currentUser?.email}</h1>
+          {
+            <p className="truncate text-sm font-medium text-white">
+              userID: {auth?.currentUser?.uid}
+            </p>
+          }
           <Disclosure.Panel className="sm:hidden">
             <div className="space-y-1 px-2 pt-2 pb-3">
               {navigation.map((item) => (

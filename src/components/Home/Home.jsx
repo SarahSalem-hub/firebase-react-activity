@@ -1,4 +1,6 @@
+import { addDoc, collection, getDocs } from "firebase/firestore";
 import React, { useState, useEffect } from "react";
+import { auth, db } from "../../util/firebase";
 
 // This is just for illustrating purposes. Please don't rely on it.
 const TODO_EXAMPLE = [
@@ -19,14 +21,28 @@ const TODO_EXAMPLE = [
 const Home = () => {
   const [todo, setTodo] = useState();
   const [todos, setTodos] = useState([]);
+  const todoCollectionRef = collection(db, "todos");
+  // console.log(todoCollectionRef);
 
   const getListOfTodos = async () => {
     // Write the code to get the todo list here
+    const todoData = await getDocs(todoCollectionRef);
+    const todoDoc = todoData.docs.map((doc) => {
+      return { ...doc.data(), id: doc.id };
+      console.log(doc);
+    });
+    setTodos(todoDoc);
   };
+  // console.log(auth.currentUser);
 
   const addTodo = async (e) => {
     e.preventDefault();
     // Write the code to add a new todo here. Remember that it should include the uid so it can be filtered.
+    const addTodo = await addDoc(todoCollectionRef, {
+      todoName: todo,
+      uid: auth?.currentUser?.uid
+    })
+    
     getListOfTodos();
   };
 
@@ -78,32 +94,34 @@ const Home = () => {
             </form>
             <br />
             <h1>Todos</h1>
+
             <ul className="divide-y divide-gray-200">
               {/* The code below should be changed to get the data from the docs */}
-              {TODO_EXAMPLE.filter(
-                (todo) => todo.uid === "IOUASD0123jl??M<OP@&#"
-              ).map((todo) => {
-                return (
-                  <li
-                    key={todo.id}
-                    className="relative bg-white py-5 px-4 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 hover:bg-gray-50"
-                  >
-                    <div className="flex justify-between space-x-3">
-                      <div className="min-w-0 flex-1">
-                        <a href="#" className="block focus:outline-none">
-                          <span
-                            className="absolute inset-0"
-                            aria-hidden="true"
-                          />
-                          <p className="truncate text-sm font-medium text-gray-900">
-                            {todo.name}
-                          </p>
-                        </a>
+              
+              {todos
+                .filter((todo) => todo.uid === auth?.currentUser?.uid)
+                .map((todo) => {
+                  return (
+                    <li
+                      key={todo.id}
+                      className="relative bg-white py-5 px-4 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 hover:bg-gray-50"
+                    >
+                      <div className="flex justify-between space-x-3">
+                        <div className="min-w-0 flex-1">
+                          <a href="#" className="block focus:outline-none">
+                            <span
+                              className="absolute inset-0"
+                              aria-hidden="true"
+                            />
+                            <p className="truncate text-sm font-medium text-gray-900">
+                              {todo.todoName}
+                            </p>
+                          </a>
+                        </div>
                       </div>
-                    </div>
-                  </li>
-                );
-              })}
+                    </li>
+                  );
+                })}
             </ul>
           </div>
         </div>
